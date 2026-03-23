@@ -1,0 +1,31 @@
+{
+  "storage_account_name": "medallionpipeline",
+  "email_notifications": {
+    "recipient": "admin@fabric-pipeline.com",
+    "sender": "fabric_pipeline@medallionpipeline.com"
+  },
+  "bronze_layer": {
+    "raw_data_path": "abfss://rawdata@medallionpipeline.dfs.core.windows.net/",
+    "base_path": "abfss://bronze@medallionpipeline.dfs.core.windows.net/",
+    "raw_user_table_name": "bronze_user_data",
+    "raw_population_table_name": "bronze_population_data",
+    "processed_table_name": "bronze_processed_data"
+  },
+  "silver_layer": {
+    "base_path": "abfss://silver@medallionpipeline.dfs.core.windows.net/",
+    "user_data_table_name": "silver_user_data",
+    "population_data_table_name": "silver_population_data"
+  },
+  "gold_layer": {
+    "base_path": "abfss://gold@medallionpipeline.dfs.core.windows.net/",
+    "aggregated_user_data_table_name": "gold_user_demographics",
+    "aggregated_population_data_table_name": "gold_population_stats",
+    "llm_view_table_name": "gold_llm_demographic_summary",
+    "reporting_view_table_name": "gold_reporting_demographic_summary"
+  },
+  "retry_settings": {
+    "tries": 3,
+    "delay": 5,
+    "backoff": 2
+  }
+}
