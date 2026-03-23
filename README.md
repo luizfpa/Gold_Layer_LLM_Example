@@ -8,12 +8,17 @@ This repository provides a comprehensive solution for building a data pipeline i
 . 
 ├── notebooks/
 │   ├── bronze/
-│   │   ├── ingest_user_data.py        # Ingest user data from RandomUser API
-│   │   ├── ingest_population_data.py  # Ingest population data from World Bank API
+│   │   ├── ingest_data.py              # Ingest raw data
+│   │   ├── ingest_user_data.py         # Ingest user data from RandomUser API
+│   │   └── ingest_population_data.py   # Ingest population data from World Bank API
 │   ├── silver/
-│   │   ├── process_user_data.py       # Clean and standardize user data
-│   │   ├── process_population_data.py # Clean and standardize population data
+│   │   ├── silver_layer_processing.py  # Silver layer main script
+│   │   ├── process_user_data.py        # Clean and standardize user data
+│   │   └── process_population_data.py  # Clean and standardize population data
 │   ├── gold/
+│   │   ├── gold_layer_processing.py   # Gold layer main script
+│   │   ├── llm_view_creation.py        # Create LLM-friendly view
+│   │   ├── reporting_view_creation.py  # Create BI view
 │   │   ├── aggregate_user_data.py     # Aggregate user demographics
 │   │   ├── aggregate_population_data.py # Aggregate population stats
 │   │   ├── create_llm_demographic_view.py   # Create LLM-friendly view
@@ -30,6 +35,8 @@ This repository provides a comprehensive solution for building a data pipeline i
 ├── data/
 │   ├── users.csv                      # Sample user data
 │   └── population.csv                 # Sample population data
+├── .gitignore
+├── Gold_Layer_LLM_Ingestion.code-workspace
 └── README.md
 ```
 
