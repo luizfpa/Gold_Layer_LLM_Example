@@ -86,10 +86,44 @@ The pipeline follows the Medallion architecture, which logically organizes data 
 
 ## Key Pipeline Features
 
+- **Local Execution**: The pipeline can be run locally using Python and DuckDB without requiring Azure or Microsoft Fabric.
 - **Idempotency**: Implemented using Delta Lake `MERGE INTO` operations.
 - **Retry Logic**: Built-in retry mechanisms using `pipeline_utils.py`.
 - **Notifications**: Email notifications on success or failure.
 - **Configuration-driven**: All parameters managed via `pipeline_config.json`.
+
+## Running Locally
+
+The pipeline is designed to run locally using **DuckDB** as a lightweight embedded database, making it easy to develop and test without cloud infrastructure.
+
+### Prerequisites
+
+- Python 3.9+
+- DuckDB (`pip install duckdb`)
+
+### Execution Order
+
+Run the scripts in the following order:
+
+1. **Bronze Layer:**
+   ```bash
+   python notebooks/bronze/ingest_data.py
+   python notebooks/bronze/bronze_layer_processing.py
+   ```
+
+2. **Silver Layer:**
+   ```bash
+   python notebooks/silver/silver_layer_processing.py
+   ```
+
+3. **Gold Layer:**
+   ```bash
+   python notebooks/gold/gold_layer_processing.py
+   python notebooks/gold/llm_view_creation.py
+   python notebooks/gold/reporting_view_creation.py
+   ```
+
+Data is stored in `tmp/duckdb/` (already ignored by `.gitignore`).
 
 ## Next Steps
 
