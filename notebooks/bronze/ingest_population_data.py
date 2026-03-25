@@ -1,55 +1,78 @@
-import sys
 import os
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import current_timestamp, lit
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType, LongType
+import sys
+import csv
+import duckdb
+from datetime import datetime
 
-# Import utility functions
-sys.path.append("../utils")
-from pipeline_utils import retry, send_email_notification, create_idempotent_table, upsert_to_delta, config, get_storage_path, get_raw_data_path, create_spark_session
+# Add utils to path
+notebooks_dir = os.path.dirname(os.path.abspath(__file__))
+utils_path = os.path.join(os.path.dirname(notebooks_dir), 'utils')
+sys.path.append(utils_path)
+from pipeline_utils import send_email_notification, config
 
-# Initialize Spark Session
-spark = create_spark_session("BronzePopulationIngestion")
-
-# Load Configuration
-bronze_config = config.get('bronze_layer', {})
-BRONZE_LAYER_PATH = bronze_config.get('base_path', 'abfss://bronze@medallionpipeline.dfs.core.windows.net/')
-RAW_DATA_PATH_CONFIG = bronze_config.get('raw_data_path', 'abfss://rawdata@medallionpipeline.dfs.core.windows.net/')
 SOURCE_SYSTEM_NAME = "world_bank_api"
-BRONZE_TABLE_NAME = bronze_config.get('raw_population_table_name', 'bronze_population_data')
-
-# Resolve paths based on local mode
-BRONZE_STORAGE_PATH = get_storage_path(BRONZE_LAYER_PATH)
-RAW_DATA_PATH = get_raw_data_path("population.csv")
-
-# Define schema for the raw population data
-population_schema = StructType([
-    StructField("country", StringType(), True),
-    StructField("year", StringType(), True),
-    StructField("value", LongType(), True)
-])
+TABLE_NAME = "bronze_population_data"
+DATA_FILE = "population.csv"
 
 def ingest_population_data():
-    print(f"Ingesting population data into Bronze layer table: {BRONZE_TABLE_NAME}")
-    
-    # Read the raw CSV file
+    print(f"Ingesting population data into Bronze layer table: {TABLE_NAME}")
+
+    # Get paths
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data', DATA_FILE)
+    output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tmp', 'duckdb', 'bronze')
+    os.makedirs(output_dir, exist_ok=True)
+    db_path = os.path.join(output_dir, "bronze.duckdb")
+
+    conn = duckdb.connect(db_path)
+
+    # Drop table if exists
+    conn.execute(f"DROP TABLE IF EXISTS {TABLE_NAME}")
+
+    # Create table 
+    conn.execute(f"""
+    CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
+        country VARCHAR,
+        year VARCHAR,
+        value BIGINT,
+        ingestion_timestamp TIMESTAMP,
+        source_system VARCHAR,
+        PRIMARY KEY (country, year, source_system)
+    )
+    """)
+
+    # Read CSV
     try:
-        df_raw = spark.read.format("csv").option("header", "true").schema(population_schema).load(RAW_DATA_PATH + "population.csv")
+        with open(data_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
     except Exception as e:
         print(f"Error reading raw data: {e}")
-        df_raw = spark.createDataFrame([], population_schema)
+        rows = []
 
-    # Add metadata columns
-    df_bronze = df_raw.withColumn("ingestion_timestamp", current_timestamp())
-    df_bronze = df_bronze.withColumn("source_system", lit(SOURCE_SYSTEM_NAME))
+    ingestion_timestamp = datetime.now()
 
-    # Ensure the Bronze table exists with the correct schema
-    create_idempotent_table(spark, BRONZE_TABLE_NAME, population_schema.add(StructField("ingestion_timestamp", TimestampType(), True)).add(StructField("source_system", StringType(), True)), ["country", "year", "source_system"], BRONZE_STORAGE_PATH)
+    # Insert data
+    for row in rows:
+        try:
+            value = int(row.get('value', 0))
+        except:
+            value = 0
 
-    # Use upsert for idempotency
-    upsert_to_delta(spark, df_bronze, BRONZE_TABLE_NAME, ["country", "year", "source_system"], BRONZE_STORAGE_PATH)
+        conn.execute(f"""
+        INSERT INTO {TABLE_NAME} VALUES (
+            ?, ?, ?, ?, ?
+        ) ON CONFLICT (country, year, source_system) DO UPDATE SET
+            value = excluded.value,
+            ingestion_timestamp = excluded.ingestion_timestamp,
+            source_system = excluded.source_system
+        """, (
+            row.get('country'), row.get('year'), value,
+            ingestion_timestamp, SOURCE_SYSTEM_NAME
+        ))
 
-    print(f"Successfully ingested {df_bronze.count()} records into Bronze layer.")
+    count = conn.execute(f"SELECT COUNT(*) FROM {TABLE_NAME}").fetchone()[0]
+    print(f"Successfully ingested {count} records into Bronze layer.")
+    conn.close()
 
 if __name__ == "__main__":
     try:
@@ -65,5 +88,3 @@ if __name__ == "__main__":
             body=f"The Bronze layer population ingestion for {SOURCE_SYSTEM_NAME} failed with error: {e}"
         )
         raise
-    finally:
-        spark.stop()

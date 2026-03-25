@@ -6,8 +6,7 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 GOLD_LAYER_PATH = "./tmp/duckdb/gold"
-GOLD_AGGREGATED_PRODUCT_DATA_TABLE_NAME = "gold_aggregated_product_data"
-GOLD_REPORTING_VIEW_TABLE_NAME = "gold_reporting_product_summary"
+GOLD_REPORTING_VIEW_TABLE_NAME = "gold_reporting_demographic_summary"
 
 def get_db_path(table_name, layer_path=GOLD_LAYER_PATH):
     os.makedirs(layer_path, exist_ok=True)
@@ -16,74 +15,63 @@ def get_db_path(table_name, layer_path=GOLD_LAYER_PATH):
 def create_reporting_view_table():
     db_path = get_db_path(GOLD_REPORTING_VIEW_TABLE_NAME)
     conn = duckdb.connect(db_path)
-    
+    conn.execute(f"DROP TABLE IF EXISTS {GOLD_REPORTING_VIEW_TABLE_NAME}")
     conn.execute(f"""
-    CREATE TABLE IF NOT EXISTS {GOLD_REPORTING_VIEW_TABLE_NAME} (
-        activity_date DATE,
-        activity_year INTEGER,
-        activity_month INTEGER,
-        activity_day INTEGER,
-        product_name VARCHAR,
-        daily_unique_products BIGINT,
-        daily_total_value DOUBLE,
-        daily_average_value DOUBLE
+    CREATE TABLE {GOLD_REPORTING_VIEW_TABLE_NAME} (
+        country VARCHAR,
+        gender VARCHAR,
+        user_count BIGINT,
+        average_age DOUBLE,
+        age_group VARCHAR
     )
     """)
     conn.close()
-    logging.info(f"Table '{GOLD_REPORTING_VIEW_TABLE_NAME}' ensured at '{db_path}'")
+    logging.info(f"Table '{GOLD_REPORTING_VIEW_TABLE_NAME}' created at '{db_path}'")
 
 def create_reporting_view():
-    # Read from gold aggregated table
-    gold_db_path = get_db_path(GOLD_AGGREGATED_PRODUCT_DATA_TABLE_NAME)
+    # Read from gold user demographics table
+    gold_db_path = get_db_path("gold_user_demographics")
     conn_gold = duckdb.connect(gold_db_path)
     
-    logging.info(f"Reading aggregated data from Gold layer table: {GOLD_AGGREGATED_PRODUCT_DATA_TABLE_NAME}")
-    gold_data = conn_gold.execute(f"SELECT * FROM {GOLD_AGGREGATED_PRODUCT_DATA_TABLE_NAME}").fetchall()
+    logging.info(f"Reading user demographics from Gold layer...")
+    gold_data = conn_gold.execute(f"SELECT * FROM gold_user_demographics").fetchall()
     conn_gold.close()
     
     logging.info(f"Creating BI/Reporting view with {len(gold_data)} records...")
     
-    # Add time dimension columns
+    # Add age group dimension
     reporting_data = []
     for row in gold_data:
-        activity_date = row[0]
-        product_name = row[1]
-        daily_unique_products = row[2]
-        daily_total_value = row[3]
-        daily_average_value = row[4]
+        country = row[0]
+        gender = row[1]
+        user_count = row[2]
+        average_age = row[3]
         
-        # Extract year, month, day
-        if hasattr(activity_date, 'year'):
-            activity_year = activity_date.year
-            activity_month = activity_date.month
-            activity_day = activity_date.day
+        # Determine age group
+        if average_age < 25:
+            age_group = "Young (0-24)"
+        elif average_age < 40:
+            age_group = "Adult (25-39)"
+        elif average_age < 60:
+            age_group = "Middle-aged (40-59)"
         else:
-            # Handle string date
-            dt = datetime.strptime(str(activity_date), "%Y-%m-%d")
-            activity_year = dt.year
-            activity_month = dt.month
-            activity_day = dt.day
+            age_group = "Senior (60+)"
         
         reporting_data.append((
-            activity_date,
-            activity_year,
-            activity_month,
-            activity_day,
-            product_name,
-            daily_unique_products,
-            daily_total_value,
-            daily_average_value
+            country,
+            gender,
+            user_count,
+            average_age,
+            age_group
         ))
     
     # Write to reporting view table
     reporting_db_path = get_db_path(GOLD_REPORTING_VIEW_TABLE_NAME)
     conn = duckdb.connect(reporting_db_path)
     
-    conn.execute(f"DELETE FROM {GOLD_REPORTING_VIEW_TABLE_NAME}")
-    
     for row in reporting_data:
         conn.execute(f"""
-        INSERT INTO {GOLD_REPORTING_VIEW_TABLE_NAME} VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO {GOLD_REPORTING_VIEW_TABLE_NAME} VALUES (?, ?, ?, ?, ?)
         """, row)
     
     logging.info(f"Successfully created BI/Reporting view with {len(reporting_data)} records.")

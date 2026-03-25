@@ -5,8 +5,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 GOLD_LAYER_PATH = "./tmp/duckdb/gold"
-GOLD_AGGREGATED_PRODUCT_DATA_TABLE_NAME = "gold_aggregated_product_data"
-GOLD_LLM_VIEW_TABLE_NAME = "gold_llm_product_summary"
+GOLD_LLM_VIEW_TABLE_NAME = "gold_llm_demographic_summary"
 
 def get_db_path(table_name, layer_path=GOLD_LAYER_PATH):
     os.makedirs(layer_path, exist_ok=True)
@@ -15,27 +14,26 @@ def get_db_path(table_name, layer_path=GOLD_LAYER_PATH):
 def create_llm_view_table():
     db_path = get_db_path(GOLD_LLM_VIEW_TABLE_NAME)
     conn = duckdb.connect(db_path)
-    
+    conn.execute(f"DROP TABLE IF EXISTS {GOLD_LLM_VIEW_TABLE_NAME}")
     conn.execute(f"""
-    CREATE TABLE IF NOT EXISTS {GOLD_LLM_VIEW_TABLE_NAME} (
-        activity_date DATE,
-        product_name VARCHAR,
-        daily_unique_products BIGINT,
-        daily_total_value DOUBLE,
-        daily_average_value DOUBLE,
-        product_summary_text VARCHAR
+    CREATE TABLE {GOLD_LLM_VIEW_TABLE_NAME} (
+        country VARCHAR,
+        gender VARCHAR,
+        user_count BIGINT,
+        average_age DOUBLE,
+        summary_text VARCHAR
     )
     """)
     conn.close()
-    logging.info(f"Table '{GOLD_LLM_VIEW_TABLE_NAME}' ensured at '{db_path}'")
+    logging.info(f"Table '{GOLD_LLM_VIEW_TABLE_NAME}' created at '{db_path}'")
 
 def create_llm_view():
-    # Read from gold aggregated table
-    gold_db_path = get_db_path(GOLD_AGGREGATED_PRODUCT_DATA_TABLE_NAME)
+    # Read from gold user demographics table
+    gold_db_path = get_db_path("gold_user_demographics")
     conn_gold = duckdb.connect(gold_db_path)
     
-    logging.info(f"Reading aggregated data from Gold layer table: {GOLD_AGGREGATED_PRODUCT_DATA_TABLE_NAME}")
-    gold_data = conn_gold.execute(f"SELECT * FROM {GOLD_AGGREGATED_PRODUCT_DATA_TABLE_NAME}").fetchall()
+    logging.info(f"Reading user demographics from Gold layer...")
+    gold_data = conn_gold.execute(f"SELECT * FROM gold_user_demographics").fetchall()
     conn_gold.close()
     
     logging.info(f"Creating LLM view with {len(gold_data)} records...")
@@ -43,21 +41,19 @@ def create_llm_view():
     # Create summary text for each record
     llm_data = []
     for row in gold_data:
-        activity_date = row[0]
-        product_name = row[1]
-        daily_unique_products = row[2]
-        daily_total_value = row[3]
-        daily_average_value = row[4]
+        country = row[0]
+        gender = row[1]
+        user_count = row[2]
+        average_age = row[3]
         
         # Create LLM-friendly summary
-        summary_text = f"On {activity_date} the product {product_name} had {daily_unique_products} unique activities, with a total value of {daily_total_value:.2f} and an average value of {daily_average_value:.2f}."
+        summary_text = f"In {country}, there are {user_count} users of gender {gender} with an average age of {average_age:.1f} years."
         
         llm_data.append((
-            activity_date,
-            product_name,
-            daily_unique_products,
-            daily_total_value,
-            daily_average_value,
+            country,
+            gender,
+            user_count,
+            average_age,
             summary_text
         ))
     
@@ -65,11 +61,9 @@ def create_llm_view():
     llm_db_path = get_db_path(GOLD_LLM_VIEW_TABLE_NAME)
     conn = duckdb.connect(llm_db_path)
     
-    conn.execute(f"DELETE FROM {GOLD_LLM_VIEW_TABLE_NAME}")
-    
     for row in llm_data:
         conn.execute(f"""
-        INSERT INTO {GOLD_LLM_VIEW_TABLE_NAME} VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO {GOLD_LLM_VIEW_TABLE_NAME} VALUES (?, ?, ?, ?, ?)
         """, row)
     
     logging.info(f"Successfully created LLM consumption view with {len(llm_data)} records.")

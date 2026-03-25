@@ -71,6 +71,14 @@ def get_table_name_from_path(path: str) -> str:
     """Extract table name from path."""
     return path.split('/')[-1] if '/' in path else path
 
+def get_raw_data_path(filename: str) -> str:
+    """Get the path to raw data files."""
+    if LOCAL_MODE:
+        # In local mode, use relative path to data folder
+        data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data')
+        return data_dir + "/"
+    return f"abfss://rawdata@medallionpipeline.dfs.core.windows.net/{filename}"
+
 def create_idempotent_table(spark, table_name: str, schema, primary_keys: list[str], path: str):
     """
     Creates a table if it doesn't exist using DuckDB.

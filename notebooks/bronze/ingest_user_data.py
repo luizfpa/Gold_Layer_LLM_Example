@@ -1,68 +1,99 @@
-import sys
 import os
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import current_timestamp, lit, col
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType
+import sys
+import csv
+import duckdb
+from datetime import datetime
 
-# Import utility functions
-# Get the absolute path to the notebooks directory
+# Add utils to path
 notebooks_dir = os.path.dirname(os.path.abspath(__file__))
 utils_path = os.path.join(os.path.dirname(notebooks_dir), 'utils')
 sys.path.append(utils_path)
-from pipeline_utils import retry, send_email_notification, create_idempotent_table, upsert_to_delta, config, get_storage_path, get_raw_data_path, create_spark_session
+from pipeline_utils import send_email_notification, config
 
-# Initialize Spark Session
-spark = create_spark_session("BronzeUserIngestion")
-
-# Load Configuration
-bronze_config = config.get('bronze_layer', {})
-BRONZE_LAYER_PATH = bronze_config.get('base_path', 'abfss://bronze@medallionpipeline.dfs.core.windows.net/')
-RAW_DATA_PATH_CONFIG = bronze_config.get('raw_data_path', 'abfss://rawdata@medallionpipeline.dfs.core.windows.net/')
 SOURCE_SYSTEM_NAME = "random_user_api"
-BRONZE_TABLE_NAME = bronze_config.get('raw_user_table_name', 'bronze_user_data')
-
-# Resolve paths based on local mode
-BRONZE_STORAGE_PATH = get_storage_path(BRONZE_LAYER_PATH)
-# Correctly construct raw data path - get_raw_data_path already includes filename
-RAW_DATA_PATH = get_raw_data_path("users.csv")
-
-# Define schema for the raw user data
-user_schema = StructType([
-    StructField("gender", StringType(), True),
-    StructField("first_name", StringType(), True),
-    StructField("last_name", StringType(), True),
-    StructField("email", StringType(), True),
-    StructField("phone", StringType(), True),
-    StructField("dob_date", StringType(), True),
-    StructField("dob_age", IntegerType(), True),
-    StructField("location_city", StringType(), True),
-    StructField("location_country", StringType(), True),
-    StructField("registered_date", StringType(), True),
-    StructField("cell", StringType(), True)
-])
+TABLE_NAME = "bronze_user_data"
+DATA_FILE = "users.csv"
 
 def ingest_user_data():
-    print(f"Ingesting user data into Bronze layer table: {BRONZE_TABLE_NAME}")
-    
-    # Read the raw CSV file
+    print(f"Ingesting user data into Bronze layer table: {TABLE_NAME}")
+
+    # Get paths
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data', DATA_FILE)
+    output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tmp', 'duckdb', 'bronze')
+    os.makedirs(output_dir, exist_ok=True)
+    db_path = os.path.join(output_dir, "bronze.duckdb")
+
+    conn = duckdb.connect(db_path)
+
+    # Drop table if exists to ensure clean state
+    conn.execute(f"DROP TABLE IF EXISTS {TABLE_NAME}")
+
+    # Create table 
+    conn.execute(f"""
+    CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
+        gender VARCHAR,
+        first_name VARCHAR,
+        last_name VARCHAR,
+        email VARCHAR,
+        phone VARCHAR,
+        dob_date VARCHAR,
+        dob_age INTEGER,
+        location_city VARCHAR,
+        location_country VARCHAR,
+        registered_date VARCHAR,
+        cell VARCHAR,
+        ingestion_timestamp TIMESTAMP,
+        source_system VARCHAR,
+        PRIMARY KEY (email, source_system)
+    )
+    """)
+
+    # Read CSV
     try:
-        df_raw = spark.read.format("csv").option("header", "true").schema(user_schema).load(RAW_DATA_PATH + "users.csv")
+        with open(data_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
     except Exception as e:
         print(f"Error reading raw data: {e}")
-        # If file not found, create empty dataframe
-        df_raw = spark.createDataFrame([], user_schema)
+        rows = []
 
-    # Add metadata columns
-    df_bronze = df_raw.withColumn("ingestion_timestamp", current_timestamp())
-    df_bronze = df_bronze.withColumn("source_system", lit(SOURCE_SYSTEM_NAME))
+    ingestion_timestamp = datetime.now()
 
-    # Ensure the Bronze table exists with the correct schema
-    create_idempotent_table(spark, BRONZE_TABLE_NAME, user_schema.add(StructField("ingestion_timestamp", TimestampType(), True)).add(StructField("source_system", StringType(), True)), ["email", "source_system"], BRONZE_STORAGE_PATH)
+    # Insert data (replace if exists based on email and source_system)
+    for row in rows:
+        # Clean and convert age to integer
+        try:
+            dob_age = int(row.get('dob_age', 0))
+        except:
+            dob_age = 0
 
-    # Use upsert for idempotency
-    upsert_to_delta(spark, df_bronze, BRONZE_TABLE_NAME, ["email", "source_system"], BRONZE_STORAGE_PATH)
+        conn.execute(f"""
+        INSERT INTO {TABLE_NAME} VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ) ON CONFLICT (email, source_system) DO UPDATE SET
+            gender = excluded.gender,
+            first_name = excluded.first_name,
+            last_name = excluded.last_name,
+            phone = excluded.phone,
+            dob_date = excluded.dob_date,
+            dob_age = excluded.dob_age,
+            location_city = excluded.location_city,
+            location_country = excluded.location_country,
+            registered_date = excluded.registered_date,
+            cell = excluded.cell,
+            ingestion_timestamp = excluded.ingestion_timestamp,
+            source_system = excluded.source_system
+        """, (
+            row.get('gender'), row.get('first_name'), row.get('last_name'),
+            row.get('email'), row.get('phone'), row.get('dob_date'),
+            dob_age, row.get('location_city'), row.get('location_country'),
+            row.get('registered_date'), row.get('cell'),
+            ingestion_timestamp, SOURCE_SYSTEM_NAME
+        ))
 
-    print(f"Successfully ingested {df_bronze.count()} records into Bronze layer.")
+    count = conn.execute(f"SELECT COUNT(*) FROM {TABLE_NAME}").fetchone()[0]
+    print(f"Successfully ingested {count} records into Bronze layer.")
+    conn.close()
 
 if __name__ == "__main__":
     try:
@@ -78,5 +109,3 @@ if __name__ == "__main__":
             body=f"The Bronze layer user ingestion for {SOURCE_SYSTEM_NAME} failed with error: {e}"
         )
         raise
-    finally:
-        spark.stop()
