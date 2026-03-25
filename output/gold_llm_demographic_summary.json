@@ -4,258 +4,258 @@
     "gender": "male",
     "user_count": 2,
     "average_age": 58.0,
-    "summary_text": "In Germany, there are 2 users of gender male with an average age of 58.0 years."
+    "insight": "In Germany, there are 2 users of gender male with an average age of 58.0 years."
   },
   {
     "country": "Norway",
     "gender": "male",
     "user_count": 2,
     "average_age": 70.5,
-    "summary_text": "In Norway, there are 2 users of gender male with an average age of 70.5 years."
+    "insight": "In Norway, there are 2 users of gender male with an average age of 70.5 years."
   },
   {
     "country": "Denmark",
     "gender": "male",
     "user_count": 7,
-    "average_age": 45.142857142857146,
-    "summary_text": "In Denmark, there are 7 users of gender male with an average age of 45.1 years."
+    "average_age": 45.1,
+    "insight": "In Denmark, there are 7 users of gender male with an average age of 45.1 years."
   },
   {
     "country": "Mexico",
     "gender": "female",
     "user_count": 2,
     "average_age": 48.0,
-    "summary_text": "In Mexico, there are 2 users of gender female with an average age of 48.0 years."
+    "insight": "In Mexico, there are 2 users of gender female with an average age of 48.0 years."
   },
   {
     "country": "Serbia",
     "gender": "female",
     "user_count": 1,
     "average_age": 61.0,
-    "summary_text": "In Serbia, there are 1 users of gender female with an average age of 61.0 years."
+    "insight": "In Serbia, there are 1 users of gender female with an average age of 61.0 years."
   },
   {
     "country": "Ukraine",
     "gender": "male",
     "user_count": 6,
     "average_age": 49.0,
-    "summary_text": "In Ukraine, there are 6 users of gender male with an average age of 49.0 years."
+    "insight": "In Ukraine, there are 6 users of gender male with an average age of 49.0 years."
   },
   {
     "country": "Brazil",
     "gender": "female",
     "user_count": 2,
     "average_age": 34.0,
-    "summary_text": "In Brazil, there are 2 users of gender female with an average age of 34.0 years."
+    "insight": "In Brazil, there are 2 users of gender female with an average age of 34.0 years."
   },
   {
     "country": "Norway",
     "gender": "female",
     "user_count": 2,
     "average_age": 36.0,
-    "summary_text": "In Norway, there are 2 users of gender female with an average age of 36.0 years."
+    "insight": "In Norway, there are 2 users of gender female with an average age of 36.0 years."
   },
   {
     "country": "Canada",
     "gender": "male",
     "user_count": 2,
     "average_age": 41.5,
-    "summary_text": "In Canada, there are 2 users of gender male with an average age of 41.5 years."
+    "insight": "In Canada, there are 2 users of gender male with an average age of 41.5 years."
   },
   {
     "country": "Ukraine",
     "gender": "female",
     "user_count": 3,
     "average_age": 53.0,
-    "summary_text": "In Ukraine, there are 3 users of gender female with an average age of 53.0 years."
+    "insight": "In Ukraine, there are 3 users of gender female with an average age of 53.0 years."
   },
   {
     "country": "India",
     "gender": "male",
     "user_count": 3,
     "average_age": 54.0,
-    "summary_text": "In India, there are 3 users of gender male with an average age of 54.0 years."
+    "insight": "In India, there are 3 users of gender male with an average age of 54.0 years."
   },
   {
     "country": "Canada",
     "gender": "female",
     "user_count": 3,
-    "average_age": 38.666666666666664,
-    "summary_text": "In Canada, there are 3 users of gender female with an average age of 38.7 years."
+    "average_age": 38.7,
+    "insight": "In Canada, there are 3 users of gender female with an average age of 38.7 years."
   },
   {
     "country": "United Kingdom",
     "gender": "female",
     "user_count": 3,
-    "average_age": 43.666666666666664,
-    "summary_text": "In United Kingdom, there are 3 users of gender female with an average age of 43.7 years."
+    "average_age": 43.7,
+    "insight": "In United Kingdom, there are 3 users of gender female with an average age of 43.7 years."
   },
   {
     "country": "New Zealand",
     "gender": "female",
     "user_count": 3,
-    "average_age": 37.666666666666664,
-    "summary_text": "In New Zealand, there are 3 users of gender female with an average age of 37.7 years."
+    "average_age": 37.7,
+    "insight": "In New Zealand, there are 3 users of gender female with an average age of 37.7 years."
   },
   {
     "country": "Germany",
     "gender": "female",
     "user_count": 2,
     "average_age": 70.0,
-    "summary_text": "In Germany, there are 2 users of gender female with an average age of 70.0 years."
+    "insight": "In Germany, there are 2 users of gender female with an average age of 70.0 years."
   },
   {
     "country": "Australia",
     "gender": "male",
     "user_count": 3,
-    "average_age": 37.666666666666664,
-    "summary_text": "In Australia, there are 3 users of gender male with an average age of 37.7 years."
+    "average_age": 37.7,
+    "insight": "In Australia, there are 3 users of gender male with an average age of 37.7 years."
   },
   {
     "country": "Spain",
     "gender": "female",
     "user_count": 5,
     "average_age": 60.8,
-    "summary_text": "In Spain, there are 5 users of gender female with an average age of 60.8 years."
+    "insight": "In Spain, there are 5 users of gender female with an average age of 60.8 years."
   },
   {
     "country": "United States",
     "gender": "female",
     "user_count": 2,
     "average_age": 56.5,
-    "summary_text": "In United States, there are 2 users of gender female with an average age of 56.5 years."
+    "insight": "In United States, there are 2 users of gender female with an average age of 56.5 years."
   },
   {
     "country": "France",
     "gender": "male",
     "user_count": 5,
     "average_age": 62.6,
-    "summary_text": "In France, there are 5 users of gender male with an average age of 62.6 years."
+    "insight": "In France, there are 5 users of gender male with an average age of 62.6 years."
   },
   {
     "country": "Mexico",
     "gender": "male",
     "user_count": 3,
-    "average_age": 60.666666666666664,
-    "summary_text": "In Mexico, there are 3 users of gender male with an average age of 60.7 years."
+    "average_age": 60.7,
+    "insight": "In Mexico, there are 3 users of gender male with an average age of 60.7 years."
   },
   {
     "country": "Iran",
     "gender": "male",
     "user_count": 5,
     "average_age": 39.4,
-    "summary_text": "In Iran, there are 5 users of gender male with an average age of 39.4 years."
+    "insight": "In Iran, there are 5 users of gender male with an average age of 39.4 years."
   },
   {
     "country": "India",
     "gender": "female",
     "user_count": 2,
     "average_age": 48.5,
-    "summary_text": "In India, there are 2 users of gender female with an average age of 48.5 years."
+    "insight": "In India, there are 2 users of gender female with an average age of 48.5 years."
   },
   {
     "country": "Ireland",
     "gender": "male",
     "user_count": 3,
-    "average_age": 50.333333333333336,
-    "summary_text": "In Ireland, there are 3 users of gender male with an average age of 50.3 years."
+    "average_age": 50.3,
+    "insight": "In Ireland, there are 3 users of gender male with an average age of 50.3 years."
   },
   {
     "country": "Spain",
     "gender": "male",
     "user_count": 3,
     "average_age": 29.0,
-    "summary_text": "In Spain, there are 3 users of gender male with an average age of 29.0 years."
+    "insight": "In Spain, there are 3 users of gender male with an average age of 29.0 years."
   },
   {
     "country": "Denmark",
     "gender": "female",
     "user_count": 2,
     "average_age": 70.0,
-    "summary_text": "In Denmark, there are 2 users of gender female with an average age of 70.0 years."
+    "insight": "In Denmark, there are 2 users of gender female with an average age of 70.0 years."
   },
   {
     "country": "New Zealand",
     "gender": "male",
     "user_count": 3,
     "average_age": 49.0,
-    "summary_text": "In New Zealand, there are 3 users of gender male with an average age of 49.0 years."
+    "insight": "In New Zealand, there are 3 users of gender male with an average age of 49.0 years."
   },
   {
     "country": "Iran",
     "gender": "female",
     "user_count": 1,
     "average_age": 34.0,
-    "summary_text": "In Iran, there are 1 users of gender female with an average age of 34.0 years."
+    "insight": "In Iran, there are 1 users of gender female with an average age of 34.0 years."
   },
   {
     "country": "Turkey",
     "gender": "male",
     "user_count": 1,
     "average_age": 73.0,
-    "summary_text": "In Turkey, there are 1 users of gender male with an average age of 73.0 years."
+    "insight": "In Turkey, there are 1 users of gender male with an average age of 73.0 years."
   },
   {
     "country": "Finland",
     "gender": "male",
     "user_count": 3,
     "average_age": 61.0,
-    "summary_text": "In Finland, there are 3 users of gender male with an average age of 61.0 years."
+    "insight": "In Finland, there are 3 users of gender male with an average age of 61.0 years."
   },
   {
     "country": "Netherlands",
     "gender": "male",
     "user_count": 3,
-    "average_age": 34.333333333333336,
-    "summary_text": "In Netherlands, there are 3 users of gender male with an average age of 34.3 years."
+    "average_age": 34.3,
+    "insight": "In Netherlands, there are 3 users of gender male with an average age of 34.3 years."
   },
   {
     "country": "United Kingdom",
     "gender": "male",
     "user_count": 3,
-    "average_age": 51.666666666666664,
-    "summary_text": "In United Kingdom, there are 3 users of gender male with an average age of 51.7 years."
+    "average_age": 51.7,
+    "insight": "In United Kingdom, there are 3 users of gender male with an average age of 51.7 years."
   },
   {
     "country": "Finland",
     "gender": "female",
     "user_count": 2,
     "average_age": 63.5,
-    "summary_text": "In Finland, there are 2 users of gender female with an average age of 63.5 years."
+    "insight": "In Finland, there are 2 users of gender female with an average age of 63.5 years."
   },
   {
     "country": "Brazil",
     "gender": "male",
     "user_count": 1,
     "average_age": 74.0,
-    "summary_text": "In Brazil, there are 1 users of gender male with an average age of 74.0 years."
+    "insight": "In Brazil, there are 1 users of gender male with an average age of 74.0 years."
   },
   {
     "country": "Serbia",
     "gender": "male",
     "user_count": 1,
     "average_age": 81.0,
-    "summary_text": "In Serbia, there are 1 users of gender male with an average age of 81.0 years."
+    "insight": "In Serbia, there are 1 users of gender male with an average age of 81.0 years."
   },
   {
     "country": "Switzerland",
     "gender": "female",
     "user_count": 3,
-    "average_age": 51.666666666666664,
-    "summary_text": "In Switzerland, there are 3 users of gender female with an average age of 51.7 years."
+    "average_age": 51.7,
+    "insight": "In Switzerland, there are 3 users of gender female with an average age of 51.7 years."
   },
   {
     "country": "Turkey",
     "gender": "female",
     "user_count": 1,
     "average_age": 25.0,
-    "summary_text": "In Turkey, there are 1 users of gender female with an average age of 25.0 years."
+    "insight": "In Turkey, there are 1 users of gender female with an average age of 25.0 years."
   },
   {
     "country": "Switzerland",
     "gender": "male",
     "user_count": 2,
     "average_age": 50.5,
-    "summary_text": "In Switzerland, there are 2 users of gender male with an average age of 50.5 years."
+    "insight": "In Switzerland, there are 2 users of gender male with an average age of 50.5 years."
   }
 ]
