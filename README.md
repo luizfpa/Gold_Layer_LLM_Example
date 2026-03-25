@@ -8,23 +8,16 @@ This repository provides a comprehensive solution for building a data pipeline i
 . 
 ├── notebooks/
 │   ├── bronze/
-│   │   ├── ingest_data.py              # Ingest raw data
 │   │   ├── ingest_user_data.py         # Ingest user data from RandomUser API
 │   │   └── ingest_population_data.py   # Ingest population data from World Bank API
 │   ├── silver/
-│   │   ├── silver_layer_processing.py  # Silver layer main script
-│   │   ├── process_user_data.py        # Clean and standardize user data
-│   │   └── process_population_data.py  # Clean and standardize population data
+│   │   └── silver_layer_processing.py  # Silver layer main script
 │   ├── gold/
-│   │   ├── gold_layer_processing.py   # Gold layer main script
-│   │   ├── llm_view_creation.py        # Create LLM-friendly view
-│   │   ├── reporting_view_creation.py  # Create BI view
-│   │   ├── aggregate_user_data.py     # Aggregate user demographics
-│   │   ├── aggregate_population_data.py # Aggregate population stats
-│   │   ├── create_llm_demographic_view.py   # Create LLM-friendly view
-│   │   └── create_reporting_demographic_view.py # Create BI view
+│   │   ├── gold_layer_processing.py   # Gold layer aggregation
+│   │   ├── llm_view_creation.py       # Create LLM-friendly JSON view
+│   │   └── reporting_view_creation.py  # Create BI view
 │   └── utils/
-│       └── pipeline_utils.py          # Utility functions (Retry, Idempotency)
+│       └── pipeline_utils.py          # Utility functions
 ├── docs/
 │   ├── architecture_overview.md
 │   ├── setup_guide.md
@@ -35,6 +28,7 @@ This repository provides a comprehensive solution for building a data pipeline i
 ├── data/
 │   ├── users.csv                      # Sample user data
 │   └── population.csv                 # Sample population data
+├── output/                            # Pipeline output files
 ├── .gitignore
 ├── Gold_Layer_LLM_Ingestion.code-workspace
 └── README.md
@@ -55,7 +49,7 @@ The pipeline follows the Medallion architecture, which logically organizes data 
 
 **Implementation:**
 - **Ingestion**: `ingest_user_data.py` and `ingest_population_data.py` read raw data and add metadata.
-- **Storage**: Delta Lake tables (`bronze_user_data`, `bronze_population_data`).
+- **Storage**: DuckDB tables (`bronze_user_data`, `bronze_population_data`).
 
 ### 2. Silver Layer (Refined Data)
 
@@ -67,8 +61,8 @@ The pipeline follows the Medallion architecture, which logically organizes data 
 - Schema is enforced.
 
 **Implementation:**
-- **Processing**: `process_user_data.py` cleans user data (trim, lowercase). `process_population_data.py` casts types.
-- **Storage**: Delta Lake tables (`silver_user_data`, `silver_population_data`).
+- **Processing**: `silver_layer_processing.py` processes user and population data.
+- **Storage**: DuckDB tables (`silver_user_data`, `silver_population_data`).
 
 ### 3. Gold Layer (Curated Data)
 
@@ -79,17 +73,17 @@ The pipeline follows the Medallion architecture, which logically organizes data 
 - Business-specific aggregations and joins are performed.
 
 **Implementation:**
-- **Aggregation**: `aggregate_user_data.py` and `aggregate_population_data.py` create aggregated metrics.
+- **Aggregation**: `gold_layer_processing.py` creates aggregated metrics.
 - **Views**:
-    - **LLM View**: `create_llm_demographic_view.py` creates natural language summaries.
-    - **Reporting View**: `create_reporting_demographic_view.py` creates BI-optimized views.
+    - **LLM View**: `llm_view_creation.py` creates JSON output optimized for LLM ingestion.
+    - **Reporting View**: `reporting_view_creation.py` creates CSV output for BI tools.
 
 ## Key Pipeline Features
 
 - **Local Execution**: The pipeline can be run locally using Python and DuckDB without requiring Azure or Microsoft Fabric.
-- **Idempotency**: Implemented using Delta Lake `MERGE INTO` operations.
+- **Idempotency**: Implemented using DuckDB with PRIMARY KEY constraints.
 - **Retry Logic**: Built-in retry mechanisms using `pipeline_utils.py`.
-- **Notifications**: Email notifications on success or failure.
+- **Notifications**: Log notifications on success or failure.
 - **Configuration-driven**: All parameters managed via `pipeline_config.json`.
 
 ## Running Locally
@@ -107,8 +101,8 @@ Run the scripts in the following order:
 
 1. **Bronze Layer:**
    ```bash
-   python notebooks/bronze/ingest_data.py
-   python notebooks/bronze/bronze_layer_processing.py
+   python notebooks/bronze/ingest_user_data.py
+   python notebooks/bronze/ingest_population_data.py
    ```
 
 2. **Silver Layer:**
@@ -125,11 +119,14 @@ Run the scripts in the following order:
 
 Data is stored in `tmp/duckdb/` (already ignored by `.gitignore`).
 
+Output files are generated in `output/`:
+- `gold_llm_demographic_summary.json` - LLM-optimized JSON output
+- `gold_user_demographics.csv` - User demographics aggregation
+- `gold_population_stats.csv` - Population statistics
+- `gold_reporting_demographic_summary.csv` - BI/Reporting view
+
 ## Next Steps
 
-1. Ensure dependencies are installed (PySpark, Delta Lake).
-2. Update `config/pipeline_config.json` with your Azure Storage Account details.
-3. Run the notebooks in the specified order:
-    - Bronze: `ingest_user_data.py`, `ingest_population_data.py`
-    - Silver: `process_user_data.py`, `process_population_data.py`
-    - Gold: `aggregate_user_data.py`, `aggregate_population_data.py`, `create_llm_demographic_view.py`, `create_reporting_demographic_view.py`
+1. Ensure dependencies are installed (`pip install duckdb`).
+2. Run the notebooks in the specified order.
+3. Check the `output/` folder for results.

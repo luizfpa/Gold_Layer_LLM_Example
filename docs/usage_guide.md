@@ -1,82 +1,83 @@
-# Usage Guide for Microsoft Fabric Data Pipeline
+# Usage Guide for Data Pipeline
 
-This guide provides instructions on how to execute and monitor the Microsoft Fabric data pipeline. Ensure you have completed the [Setup Guide](setup_guide.md) before proceeding.
+This guide provides instructions on how to execute and monitor the data pipeline. Ensure you have completed the [Setup Guide](setup_guide.md) before proceeding.
 
 ## Running the Data Pipeline
 
-The data pipeline consists of several PySpark notebooks that should be executed in a specific order to ensure data flows correctly through the Bronze, Silver, and Gold layers of the Medallion architecture.
+The data pipeline consists of several Python scripts that should be executed in a specific order to ensure data flows correctly through the Bronze, Silver, and Gold layers of the Medallion architecture.
 
 ### Execution Order
 
-Each step below corresponds to a notebook in the `notebooks/` directory. You will need to open each notebook in your Microsoft Fabric workspace and run all its cells.
+Each step below corresponds to a script in the `notebooks/` directory.
 
 1.  **Bronze Layer Ingestion:**
-    *   **Notebook:** `notebooks/bronze/ingest_data.py`
-    *   **Purpose:** Simulates raw data ingestion and writes it to the Bronze layer. This notebook also adds metadata like ingestion timestamp and source system.
-    *   **Action:** Open `ingest_data.py` and click `Run all`.
+    *   **Script:** `notebooks/bronze/ingest_user_data.py`
+    *   **Purpose:** Simulates raw user data ingestion and writes it to the Bronze layer.
+    *   **Action:** Run `python notebooks/bronze/ingest_user_data.py`
 
-2.  **Bronze Layer Processing:**
-    *   **Notebook:** `notebooks/bronze/bronze_layer_processing.py`
-    *   **Purpose:** Performs initial cleaning and type casting on the raw data from the Bronze layer, preparing it for the Silver layer.
-    *   **Action:** Open `bronze_layer_processing.py` and click `Run all`.
+2.  **Bronze Layer Population Ingestion:**
+    *   **Script:** `notebooks/bronze/ingest_population_data.py`
+    *   **Purpose:** Simulates raw population data ingestion and writes it to the Bronze layer.
+    *   **Action:** Run `python notebooks/bronze/ingest_population_data.py`
 
 3.  **Silver Layer Processing:**
-    *   **Notebook:** `notebooks/silver/silver_layer_processing.py`
-    *   **Purpose:** Cleans, transforms, and enriches data from the Bronze layer, applying business rules and standardizing formats. The output is a refined dataset in the Silver layer.
-    *   **Action:** Open `silver_layer_processing.py` and click `Run all`.
+    *   **Script:** `notebooks/silver/silver_layer_processing.py`
+    *   **Purpose:** Cleans, transforms, and enriches data from the Bronze layer, applying business rules and standardizing formats.
+    *   **Action:** Run `python notebooks/silver/silver_layer_processing.py`
 
 4.  **Gold Layer Processing (Aggregation):**
-    *   **Notebook:** `notebooks/gold/gold_layer_processing.py`
+    *   **Script:** `notebooks/gold/gold_layer_processing.py`
     *   **Purpose:** Aggregates and curates data from the Silver layer, creating a summarized dataset optimized for consumption.
-    *   **Action:** Open `gold_layer_processing.py` and click `Run all`.
+    *   **Action:** Run `python notebooks/gold/gold_layer_processing.py`
 
 5.  **Gold Layer LLM View Creation:**
-    *   **Notebook:** `notebooks/gold/llm_view_creation.py`
-    *   **Purpose:** Creates a specialized view from the Gold layer data, specifically structured and formatted for consumption by Large Language Models (LLMs).
-    *   **Action:** Open `llm_view_creation.py` and click `Run all`.
+    *   **Script:** `notebooks/gold/llm_view_creation.py`
+    *   **Purpose:** Creates a specialized JSON view from the Gold layer data, specifically structured and formatted for consumption by Large Language Models (LLMs).
+    *   **Action:** Run `python notebooks/gold/llm_view_creation.py`
 
 6.  **Gold Layer BI/Reporting View Creation:**
-    *   **Notebook:** `notebooks/gold/reporting_view_creation.py`
+    *   **Script:** `notebooks/gold/reporting_view_creation.py`
     *   **Purpose:** Creates another specialized view from the Gold layer data, optimized for business intelligence tools and reporting dashboards.
-    *   **Action:** Open `reporting_view_creation.py` and click `Run all`.
+    *   **Action:** Run `python notebooks/gold/reporting_view_creation.py`
 
-### Automating Pipeline Execution
+## Output Files
 
-In a production environment, you would typically automate the execution of these notebooks using Microsoft Fabric Pipelines (Data Pipelines).
+After running the pipeline, check the `output/` folder for the results:
 
-1.  **Create a Data Pipeline:** In your Fabric workspace, navigate to the `Data Factory` persona and create a new `Data pipeline`.
-2.  **Add Notebook Activities:** For each step above, add a `Notebook` activity to your data pipeline.
-3.  **Configure Dependencies:** Set up dependencies so that notebooks run in the correct sequence (e.g., `bronze_layer_processing.py` runs after `ingest_data.py` completes successfully).
-4.  **Schedule the Pipeline:** Configure a schedule for your data pipeline to run automatically at desired intervals.
+- `gold_llm_demographic_summary.json` - JSON output optimized for LLM ingestion
+- `gold_user_demographics.csv` - Aggregated user demographics
+- `gold_population_stats.csv` - Aggregated population statistics
+- `gold_reporting_demographic_summary.csv` - BI/Reporting view
 
-## Monitoring and Notifications
+## Data Storage
 
-### Email Notifications
+Data is stored locally in DuckDB databases in the `tmp/duckdb/` directory:
+- Bronze layer: `tmp/duckdb/bronze/bronze.duckdb`
+- Silver layer: `tmp/duckdb/silver/`
+- Gold layer: `tmp/duckdb/gold/`
 
-The pipeline is configured to send email notifications to `example@email.com` upon successful completion or failure of each notebook. Monitor your inbox for these alerts to stay informed about the pipeline's status.
+## Monitoring
+
+### Console Logs
+
+The pipeline logs progress and notifications to the console. Each script sends a notification upon success or failure.
 
 *   **Success Notification Example:**
     ```
-    Subject: Pipeline Success: Bronze Ingestion for simulated_source
-    Body: The Bronze layer ingestion for simulated_source completed successfully.
-    ```
-*   **Failure Notification Example:**
-    ```
-    Subject: Pipeline Failure: Silver Layer Processing
-    Body: The Silver layer processing failed with error: [Error Details]
+    --- EMAIL NOTIFICATION ---
+    To: admin@fabric-pipeline.com
+    Subject: Pipeline Success: Bronze User Ingestion for random_user_api
+
+    The Bronze layer user ingestion for random_user_api completed successfully.
     ```
 
-### Fabric Monitoring Hub
+### Checking Data
 
-Microsoft Fabric provides a comprehensive monitoring hub where you can track the execution status of your notebooks and data pipelines.
+You can inspect the data using DuckDB:
 
-1.  **Navigate to Monitoring Hub:** In the left navigation pane of the Fabric portal, click on `Monitoring hub`.
-2.  **Review Runs:** Here you can see the status of all your notebook runs and data pipeline executions, including logs, duration, and any errors.
-
-### Checking Data in Lakehouse
-
-After each layer's processing, you can inspect the data directly in your Lakehouse.
-
-1.  **Navigate to Lakehouse:** In your Fabric workspace, open the `MedallionLakehouse` you created.
-2.  **Browse Tables:** Under the `Tables` section, you will find the Delta tables created by each notebook (e.g., `bronze_raw_data`, `silver_product_data`, `gold_aggregated_product_data`, `gold_llm_product_summary`, `gold_reporting_product_summary`).
-3.  **Query Data:** You can use the built-in SQL endpoint or create new notebooks to query these tables and verify the data quality and transformations.
+```python
+import duckdb
+conn = duckdb.connect('tmp/duckdb/gold/gold_user_demographics.duckdb')
+print(conn.execute('SELECT * FROM gold_user_demographics').fetchall())
+conn.close()
+```
